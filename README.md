@@ -181,6 +181,6 @@ Reminder writes are idempotent. The server key is `reminder:<loanId>:<UTC date>`
 
 Use a separate Clerk instance and Convex deployment. Run n8n where Convex can reach it over HTTPS, not on localhost. Rotate `N8N_WEBHOOK_SECRET` and `N8N_ENCRYPTION_KEY`, and restrict who can read n8n executions. Add rate limits on the two Convex HTTP routes. Stop retaining raw webhook bodies in execution history. Claim the notice idempotency key before the HTTP call so two overlapping retries cannot send the same notice twice, and put delivery on a queue instead of calling n8n from the request that saved the loan.
 
-## Publish
+## Checked locally
 
-From this folder, create a new repository and push it yourself. Do not add it to the parent job-search project. Run `npx convex dev` once before the first push so `convex/_generated` is part of the commit. The app was not exercised against live Clerk or Convex accounts in the environment where it was written.
+The public board was opened against a local Convex deployment and showed the empty catalog. Signed-out visits to `/board` are sent to Clerk sign-in. `convex/_generated` is already in the repository. Add your own Clerk and Convex keys with the steps above; the values used for that local check are not in this repository.
