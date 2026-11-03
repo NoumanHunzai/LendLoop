@@ -1,0 +1,99 @@
+:root {
+  --paper: #f3eee4;
+  --card: #fffaf3;
+  --ink: #1d1a16;
+  --muted: #5e564c;
+  --line: #ddd4c6;
+  --green: #1d6843;
+  --green-dark: #144d31;
+  --warn: #8a4b12;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Georgia, "Iowan Old Style", Palatino, serif;
+}
+
+a { color: var(--green-dark); }
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button, .button {
+  display: inline-block;
+  border: 1px solid var(--green-dark);
+  background: var(--green);
+  color: #f7fff9;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button.quiet, a.quiet {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+main { width: min(960px, calc(100% - 2rem)); margin: 0 auto; padding: 2rem 0 4rem; }
+
+header.site {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+h1, h2, p { margin-top: 0; }
+h1 { font-size: 2.4rem; line-height: 1; margin-bottom: 0.35rem; }
+.tagline { color: var(--muted); font-size: 1.15rem; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.8rem; }
+.card, form.card, .panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+}
+.card h2 { font-size: 1.25rem; margin-bottom: 0.2rem; }
+.meta { color: var(--muted); margin: 0.2rem 0; }
+.badge {
+  display: inline-block;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.85rem;
+  margin-right: 0.3rem;
+}
+.badge.good { color: var(--green-dark); border-color: #b7d7c6; }
+.badge.warn { color: var(--warn); }
+
+nav.views { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+nav.views a { text-decoration: none; border-radius: 999px; padding: 0.3rem 0.7rem; border: 1px solid var(--line); color: var(--ink); }
+nav.views a.active { background: var(--ink); color: var(--paper); }
+
+label { display: block; margin-bottom: 0.7rem; }
+input, select, textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+}
+.row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.error { color: var(--warn); }
+.events { margin: 0.4rem 0 0; padding-left: 1.1rem; color: var(--muted); }

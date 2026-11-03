@@ -1,0 +1,201 @@
+{
+  "name": "LendLoop request notification",
+  "nodes": [
+    {
+      "id": "a1000000-0000-4000-8000-000000000001",
+      "name": "Request webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lendloop-request",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "c1000000-0000-4000-8000-000000000001"
+    },
+    {
+      "id": "a1000000-0000-4000-8000-000000000002",
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const crypto = require(\"crypto\");\n\nfunction rawBody(item) {\n  const binary = item.binary && (item.binary.data || item.binary.body);\n  if (!binary || !binary.data) return \"\";\n  return Buffer.from(binary.data, \"base64\").toString(\"utf8\");\n}\n\nfunction signaturesMatch(expected, received) {\n  const left = Buffer.from(String(expected).trim().toLowerCase());\n  const right = Buffer.from(String(received || \"\").trim().toLowerCase().replace(/^sha256=/, \"\"));\n  if (left.length === 0 || left.length !== right.length) return false;\n  return crypto.timingSafeEqual(left, right);\n}\n\nconst item = $input.first();\nconst headers = {};\nfor (const [key, value] of Object.entries(item.json.headers || {})) {\n  headers[String(key).toLowerCase()] = value;\n}\nconst timestamp = String(headers[\"x-lendloop-timestamp\"] || \"\");\nconst signature = String(headers[\"x-lendloop-signature\"] || \"\");\nconst secret = process.env.N8N_WEBHOOK_SECRET || \"\";\nconst raw = rawBody(item);\nconst bodyHash = crypto.createHash(\"sha256\").update(raw, \"utf8\").digest(\"hex\");\nconst canonical = \"v1:\" + timestamp + \":POST:n8n/request:\" + bodyHash;\nconst expected = secret ? crypto.createHmac(\"sha256\", secret).update(canonical, \"utf8\").digest(\"hex\") : \"\";\nconst skew = Math.abs(Date.now() - Number(timestamp));\nconst ok = Boolean(secret && raw)\n  && Number.isFinite(Number(timestamp))\n  && skew <= 5 * 60 * 1000\n  && signaturesMatch(expected, signature);\n\nlet notice = null;\nif (ok) {\n  const body = JSON.parse(raw);\n  notice = {\n    category: body.category,\n    endDate: body.endDate,\n    loanId: body.loanId,\n    startDate: body.startDate,\n    status: body.status,\n    toolName: body.toolName,\n  };\n}\n\nreturn [{ json: { ok, notice } }];\n"
+      }
+    },
+    {
+      "id": "a1000000-0000-4000-8000-000000000003",
+      "name": "Accepted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "signature-ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "a1000000-0000-4000-8000-000000000004",
+      "name": "Record notice",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        180
+      ],
+      "parameters": {
+        "jsCode": "const notice = $json.notice;\nif (!notice) throw new Error(\"LendLoop had no notice to record.\");\nreturn [{ json: notice }];\n"
+      }
+    },
+    {
+      "id": "a1000000-0000-4000-8000-000000000005",
+      "name": "Accept response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        180
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "a1000000-0000-4000-8000-000000000006",
+      "name": "Reject",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        980,
+        420
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "a1000000-0000-4000-8000-000000000007",
+      "name": "Report rejection",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        420
+      ],
+      "parameters": {
+        "jsCode": "throw new Error(\"LendLoop rejected a request notification.\");\n"
+      }
+    }
+  ],
+  "connections": {
+    "Request webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify signature": {
+      "main": [
+        [
+          {
+            "node": "Accepted?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accepted?": {
+      "main": [
+        [
+          {
+            "node": "Record notice",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record notice": {
+      "main": [
+        [
+          {
+            "node": "Accept response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reject": {
+      "main": [
+        [
+          {
+            "node": "Report rejection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "b1c0a7e2-6d44-4a1e-9c31-0a6e5f2d1001"
+}

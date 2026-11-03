@@ -1,0 +1,51 @@
+{
+  "name": "LendLoop error handler",
+  "nodes": [
+    {
+      "id": "a3000000-0000-4000-8000-000000000001",
+      "name": "Error trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "a3000000-0000-4000-8000-000000000002",
+      "name": "Keep failure summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const workflow = $json.workflow || {};\nconst execution = $json.execution || {};\nconst error = execution.error || {};\nreturn [{\n  json: {\n    workflow: workflow.name || \"unknown\",\n    message: error.message || \"Workflow failed\",\n  },\n}];\n"
+      }
+    }
+  ],
+  "connections": {
+    "Error trigger": {
+      "main": [
+        [
+          {
+            "node": "Keep failure summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "b1c0a7e2-6d44-4a1e-9c31-0a6e5f2d1003"
+}

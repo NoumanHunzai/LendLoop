@@ -1,0 +1,20 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      GENERIC_TIMEZONE: UTC
+      TZ: UTC
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET}
+      CONVEX_SITE_URL: ${CONVEX_SITE_URL}
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      NODE_FUNCTION_ALLOW_BUILTIN: crypto
+      N8N_RUNNERS_ENABLED: "false"
+      WEBHOOK_URL: http://localhost:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  n8n_data:
